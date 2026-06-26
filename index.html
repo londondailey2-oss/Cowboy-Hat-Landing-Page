@@ -115,9 +115,20 @@
     const note = document.querySelector('[data-waitlist-note]');
     const email = form.email.value.trim();
     if (!email) return;
-    // TODO: wire this up to a real waitlist endpoint (Shopify customer tag, Klaviyo, etc.)
-    note.textContent = `Thanks — we'll email ${email} when RIM launches.`;
-    form.reset();
+
+    const data = new FormData(form);
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(data).toString(),
+    })
+      .then(() => {
+        note.textContent = `Thanks — we'll email ${email} when RIM launches.`;
+        form.reset();
+      })
+      .catch(() => {
+        note.textContent = "Something went wrong — please try again.";
+      });
   });
 </script>
 </body>
