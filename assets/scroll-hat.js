@@ -101,8 +101,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       // scrolls into step 1 so it clears the spin-callout text box anchored near the
       // bottom — see the heroLift tween in buildTimeline.
       layout.baseScale = (isPortrait ? 1.15 : 1.6) / (2 * modelHalfExtent);
-      layout.baseX = isPortrait ? 0 : -0.6;
-      layout.baseY = isPortrait ? 0.55 : 0.6;
+      layout.baseX = isPortrait ? 0 : -0.3;
+      layout.baseY = isPortrait ? 0.55 : 0.8;
       layout.heroY = isPortrait ? 0.1 : layout.baseY;
 
       const objHalfSize = modelHalfExtent * layout.baseScale;
