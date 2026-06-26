@@ -33,6 +33,8 @@
   .spin-callout {
     position: absolute; max-width: 30vw; pointer-events: none;
     padding: 1.6vw 1.8vw; border: 1px solid rgba(255,255,255,0.4);
+    opacity: 0; /* JS (gsap) fades these in at the right scroll step; hidden by default
+                   so they don't both render stacked/overlapping before JS initializes. */
   }
   .spin-callout h3 {
     margin: 0 0 0.8vw; font-size: 1.8vw; font-weight: 700; line-height: 1.2;
