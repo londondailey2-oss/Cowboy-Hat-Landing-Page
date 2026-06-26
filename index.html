@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RIM Cowboy Hat — scroll test</title>
+<style>
+  html, body {
+    margin: 0; background: #111; color: #fff; font-family: system-ui, sans-serif;
+    overflow: hidden; touch-action: none; height: 100%;
+  }
+  html.scroll-unlocked, body.scroll-unlocked { overflow: auto; touch-action: auto; }
+  [data-hat-scroll] { position: relative; height: 100vh; }
+  [data-hat-canvas] {
+    position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;
+    background: #1a1a1a;
+  }
+  [data-hat-canvas] canvas { position: absolute; inset: 0; }
+  .hero-lockup {
+    position: absolute; top: 38%; left: 5%; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  [data-hero-text] {
+    font-weight: 800; letter-spacing: -0.02em; line-height: 0.9; text-transform: uppercase;
+  }
+  [data-hero-text] span { display: block; }
+  [data-hero-text].main { font-size: 17vw; transform: translateX(-0.5vw); }
+  [data-hero-text].sub { font-size: 5.5vw; margin-top: -0.5vw; }
+  [data-hero-text].tagline {
+    font-size: 1.6vw; font-weight: 400; text-transform: none; letter-spacing: 0;
+    margin-top: 1.2vw; max-width: 24vw; text-align: center; line-height: 1.3;
+  }
+  .spin-callout {
+    position: absolute; max-width: 30vw; pointer-events: none;
+    padding: 1.6vw 1.8vw; border: 1px solid rgba(255,255,255,0.4);
+  }
+  .spin-callout h3 {
+    margin: 0 0 0.8vw; font-size: 1.8vw; font-weight: 700; line-height: 1.2;
+  }
+  .spin-callout p {
+    margin: 0; font-size: 1vw; line-height: 1.5; font-weight: 400;
+  }
+  .spin-callout.callout-1 { left: 5%; bottom: 10%; }
+  .spin-callout.callout-2 { left: 5%; bottom: 10%; }
+  [data-scene4-text] {
+    position: absolute; top: 8%; left: 8%; font-size: 6vw; font-weight: 700;
+    opacity: 0; transform: translateX(100%); pointer-events: none;
+  }
+  .waitlist {
+    height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #000; text-align: center; padding: 0 5%;
+  }
+  .waitlist h2 { font-size: 2.4rem; font-weight: 800; margin: 0 0 0.6rem; }
+  .waitlist p { font-size: 1rem; color: rgba(255,255,255,0.7); margin: 0 0 1.8rem; max-width: 32rem; }
+  .waitlist-form { display: flex; gap: 0.6rem; width: 100%; max-width: 28rem; }
+  .waitlist-form input[type="email"] {
+    flex: 1; padding: 0.85rem 1rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px;
+    background: #111; color: #fff; font-size: 1rem; font-family: inherit;
+  }
+  .waitlist-form input[type="email"]::placeholder { color: rgba(255,255,255,0.4); }
+  .waitlist-form button {
+    padding: 0.85rem 1.4rem; border: none; border-radius: 4px; background: #fff; color: #000;
+    font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .waitlist-form button:hover { background: #ddd; }
+  .waitlist-note { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.9rem; min-height: 1.2em; }
+</style>
+</head>
+<body>
+
+<section data-hat-scroll>
+  <div data-hat-canvas data-model="assets/hat.glb">
+    <div class="hero-lockup">
+      <div data-hero-text class="main"><span>RIM</span></div>
+      <div data-hero-text class="sub"><span>Cowboy Hat</span></div>
+      <div data-hero-text class="tagline">A new approach to traditional western headwear.</div>
+    </div>
+    <div data-spin-text class="spin-callout callout-1">
+      <h3>Tradition Shouldn't Require Compromise.</h3>
+      <p>For generations, western riders have chosen traditional cowboy hats over modern headwear because they represent the culture, identity, and heritage of the western lifestyle. RIM was created to explore a new approach that preserves the classic look and feel riders love while rethinking what can exist beneath the surface.</p>
+    </div>
+    <div data-spin-text-2 class="spin-callout callout-2">
+      <h3>Engineered From the Inside Out.</h3>
+      <p>Every internal component has been carefully designed to integrate within a traditional cowboy hat without changing its familiar appearance or everyday comfort. From advanced impact materials to a low-friction internal interface, the system is being developed to work discreetly inside the hat rather than changing what makes a cowboy hat iconic.</p>
+    </div>
+  </div>
+</section>
+
+<section class="waitlist">
+  <h2>Join the Waitlist</h2>
+  <p>Join the waitlist and be the first to experience the release.</p>
+  <form class="waitlist-form" data-waitlist-form>
+    <input type="email" name="email" placeholder="Enter your email" required />
+    <button type="submit">Notify Me</button>
+  </form>
+  <div class="waitlist-note" data-waitlist-note></div>
+</section>
+
+<script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/gsap@3.12.5/dist/Observer.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="assets/scroll-hat.js?v=48"></script>
+<script>
+  document.querySelector('[data-waitlist-form]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const note = document.querySelector('[data-waitlist-note]');
+    const email = form.email.value.trim();
+    if (!email) return;
+    // TODO: wire this up to a real waitlist endpoint (Shopify customer tag, Klaviyo, etc.)
+    note.textContent = `Thanks — we'll email ${email} when RIM launches.`;
+    form.reset();
+  });
+</script>
+</body>
+</html>
