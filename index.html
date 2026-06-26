@@ -89,7 +89,8 @@
 <section class="waitlist">
   <h2>Join the Waitlist</h2>
   <p>Join the waitlist and be the first to experience the release.</p>
-  <form class="waitlist-form" data-waitlist-form>
+  <form class="waitlist-form" data-waitlist-form name="waitlist" method="POST" data-netlify="true">
+    <input type="hidden" name="form-name" value="waitlist" />
     <input type="email" name="email" placeholder="Enter your email" required />
     <button type="submit">Notify Me</button>
   </form>
@@ -106,7 +107,7 @@
   }
 }
 </script>
-<script type="module" src="assets/scroll-hat.js?v=48"></script>
+<script type="module" src="assets/scroll-hat.js?v=49"></script>
 <script>
   document.querySelector('[data-waitlist-form]').addEventListener('submit', (e) => {
     e.preventDefault();

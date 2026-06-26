@@ -274,11 +274,14 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         type: 'wheel,touch,pointer',
         tolerance: 2,
         preventDefault: true,
-        onDown: () => {
+        onDown: (self) => {
           if (isAnimating) return;
           if (currentStep >= STEP_COUNT) {
-            // All 3 steps are done — release the lock and let this gesture's momentum
-            // carry the user into the normal page scroll below.
+            // All steps are done. Require a more deliberate scroll here specifically —
+            // with a low tolerance for snappy single-scroll stepping, tiny wheel noise
+            // right after landing on the last step could otherwise falsely trigger this
+            // (irreversible) unlock when the user actually meant to scroll back up.
+            if (Math.abs(self.deltaY) < 8) return;
             unlocked = true;
             unlockScroll();
             observer.disable();
