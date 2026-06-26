@@ -100,7 +100,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         // "RIM" hero text instead of overlapping it.
         layout.baseScale = 2.6 / (2 * modelHalfExtent);
         layout.baseX = 0.45;
-        layout.baseY = 0.85;
+        layout.baseY = 0.65;
         layout.heroY = layout.baseY;
         camera.position.z = 3.4;
         return;
