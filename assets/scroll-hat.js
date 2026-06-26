@@ -40,9 +40,17 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     const spinText2 = root.querySelector('[data-spin-text-2]');
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    const FOV = 35;
+    const FOV_RAD = THREE.MathUtils.degToRad(FOV);
+    const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
     camera.position.set(0, 0, 4.2);
     camera.lookAt(0, 0, 0);
+
+    // Layout values are mutable and recomputed per-aspect (see updateFraming) so the
+    // hat stays fully framed on narrow/portrait phone viewports instead of the fixed
+    // desktop-tuned offsets clipping it.
+    const layout = { baseX: -0.6, baseY: 0.6, baseScale: 1 };
+    let modelHalfExtent = null; // half of the hat's largest dimension, set once the GLB loads
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.localClippingEnabled = true;
@@ -79,11 +87,35 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     // Cutaway clipping plane, applied only to the shell's materials.
     const clipPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 10); // 10 = fully open (no cut)
 
+    // Picks a camera distance, hat scale, and on-screen offset that keep the whole hat
+    // (plus its left-shifted hero placement) inside the frustum at the current aspect
+    // ratio. On narrow/portrait phone screens the horizontal frustum is much tighter
+    // than on desktop, so without this the hat reads as zoomed-in/cropped.
+    function updateFraming(aspect) {
+      if (modelHalfExtent == null) return;
+      const isPortrait = aspect < 0.9;
+
+      // Shrink the hat itself a bit on portrait screens, and stop shifting it off to
+      // the left (the hero text sits above it on mobile, not beside it).
+      layout.baseScale = (isPortrait ? 1.3 : 1.6) / (2 * modelHalfExtent);
+      layout.baseX = isPortrait ? 0 : -0.6;
+      layout.baseY = isPortrait ? -0.4 : 0.6;
+
+      const objHalfSize = modelHalfExtent * layout.baseScale;
+      const reachX = Math.abs(layout.baseX) + objHalfSize * 1.15;
+      const reachY = Math.abs(layout.baseY) + objHalfSize * 1.15;
+
+      const zForHeight = reachY / Math.tan(FOV_RAD / 2);
+      const zForWidth = reachX / (Math.tan(FOV_RAD / 2) * aspect);
+      camera.position.z = Math.max(zForHeight, zForWidth, 3);
+    }
+
     function resize() {
       const w = canvasHost.clientWidth;
       const h = canvasHost.clientHeight;
-      renderer.setSize(w, h, false);
+      renderer.setSize(w, h);
       camera.aspect = w / h;
+      updateFraming(camera.aspect);
       camera.updateProjectionMatrix();
     }
 
@@ -154,15 +186,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
           restPositions.set(key, partGroups[key].position.clone());
         });
 
-        const baseScale = 1.6 / Math.max(size.x, size.y, size.z);
-        hatRoot.scale.setScalar(baseScale);
+        modelHalfExtent = Math.max(size.x, size.y, size.z) / 2;
         hatRoot.rotation.x = -0.12; // tilt down slightly
 
-        const baseX = -0.6; // shift slightly right of the hero text on the far left
-        const baseY = 0.6; // lift to align with the hero text block
-
         resize();
-        buildTimeline(restPositions, baseX, baseY, baseScale);
+        buildTimeline(restPositions);
       },
       (xhr) => {
         if (xhr.total) console.log(`[scroll-hat] loading ${Math.round((xhr.loaded / xhr.total) * 100)}%`);
@@ -170,7 +198,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       (err) => console.error('[scroll-hat] failed to load GLB', err)
     );
 
-    function buildTimeline(restPositions, baseX, baseY, baseScale) {
+    function buildTimeline(restPositions) {
       const explodeOffsets = EXPLODE_ORDER.map((_, i) => (i - (EXPLODE_ORDER.length - 1) / 2) * EXPLODE_SPACING);
       const state = { explode: 0, clip: 0, spin: 0, lift: 0, shrink: 0, shiftRight: 0, riseUp: 0 };
 
@@ -179,9 +207,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         clipPlane.constant = THREE.MathUtils.lerp(10, 0, state.clip);
 
         hatRoot.rotation.y = state.spin * Math.PI * 2;
-        hatRoot.scale.setScalar(baseScale * THREE.MathUtils.lerp(1, 0.25, state.shrink));
-        placement.position.x = baseX + state.shiftRight * 0.1; // move into the right side of the screen for the explode
-        placement.position.y = baseY + state.lift * 0.6 + state.riseUp * 0.2; // keep the exploded stack on screen
+        hatRoot.scale.setScalar(layout.baseScale * THREE.MathUtils.lerp(1, 0.25, state.shrink));
+        placement.position.x = layout.baseX + state.shiftRight * 0.1; // move into the right side of the screen for the explode
+        placement.position.y = layout.baseY + state.lift * 0.6 + state.riseUp * 0.2; // keep the exploded stack on screen
 
         EXPLODE_ORDER.forEach((key, i) => {
           const rest = restPositions.get(key);

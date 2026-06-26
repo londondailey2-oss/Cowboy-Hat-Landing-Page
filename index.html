@@ -64,6 +64,27 @@
   }
   .waitlist-form button:hover { background: #ddd; }
   .waitlist-note { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.9rem; min-height: 1.2em; }
+
+  @media (max-width: 700px) {
+    .hero-lockup {
+      top: 6%; left: 50%; right: auto; transform: translateX(-50%);
+      align-items: center; width: 92%;
+    }
+    [data-hero-text].main { font-size: 19vw; transform: none; text-align: center; }
+    [data-hero-text].sub { font-size: 7vw; margin-top: 0; text-align: center; }
+    [data-hero-text].tagline {
+      font-size: 4.2vw; max-width: 84vw; margin-top: 3vw; text-align: center;
+    }
+    .spin-callout {
+      left: 5%; right: 5%; bottom: 4%; max-width: none; padding: 5vw;
+    }
+    .spin-callout h3 { font-size: 5.5vw; margin-bottom: 2vw; }
+    .spin-callout p { font-size: 3.8vw; line-height: 1.4; }
+    [data-scene4-text] { font-size: 9vw; top: 6%; left: 6%; }
+    .waitlist h2 { font-size: 1.8rem; }
+    .waitlist p { font-size: 0.95rem; }
+    .waitlist-form { flex-direction: column; }
+  }
 </style>
 </head>
 <body>
