@@ -96,10 +96,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       const isPortrait = aspect < 0.9;
 
       // Shrink the hat itself a bit on portrait screens, and stop shifting it off to
-      // the left (the hero text sits above it on mobile, not beside it).
-      layout.baseScale = (isPortrait ? 1.3 : 1.6) / (2 * modelHalfExtent);
+      // the left (the hero text sits above it on mobile, not beside it). Keep it lifted
+      // toward the upper half of the screen so it doesn't sit underneath/behind the
+      // spin-callout text box, which is anchored near the bottom on mobile.
+      layout.baseScale = (isPortrait ? 1.15 : 1.6) / (2 * modelHalfExtent);
       layout.baseX = isPortrait ? 0 : -0.6;
-      layout.baseY = isPortrait ? -0.4 : 0.6;
+      layout.baseY = isPortrait ? 0.55 : 0.6;
 
       const objHalfSize = modelHalfExtent * layout.baseScale;
       const reachX = Math.abs(layout.baseX) + objHalfSize * 1.15;
@@ -297,30 +299,58 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       // moment the page scrolls back to the very top.
       let unlocked = false;
 
+      // GSAP's Observer reports drag-style touch movement in the opposite sense from
+      // wheel scrolling: a wheel "down" tick (deltaY > 0, onDown) means scroll/advance
+      // forward, but swiping a finger up the screen — the natural "scroll down" gesture —
+      // fires onUp because the touch point itself moved up. Touch events need the two
+      // callbacks swapped so a forward swipe (up) advances and a backward swipe (down)
+      // reverses, matching wheel behavior.
+      function advance() {
+        if (isAnimating) return;
+        if (currentStep >= STEP_COUNT) return;
+        goToStep(currentStep + 1);
+      }
+      function reverse() {
+        if (isAnimating) return;
+        if (currentStep <= 0) return;
+        goToStep(currentStep - 1);
+      }
+      function tryUnlock(self) {
+        if (isAnimating) return false;
+        if (currentStep < STEP_COUNT) return false;
+        // All steps are done. Require a more deliberate scroll here specifically —
+        // with a low tolerance for snappy single-scroll stepping, tiny wheel/touch noise
+        // right after landing on the last step could otherwise falsely trigger this
+        // (irreversible) unlock when the user actually meant to scroll back up.
+        if (Math.abs(self.deltaY) < 8) return false;
+        unlocked = true;
+        unlockScroll();
+        observer.disable();
+        return true;
+      }
+
       const observer = Observer.create({
         target: window,
         type: 'wheel,touch,pointer',
         tolerance: 2,
         preventDefault: true,
         onDown: (self) => {
-          if (isAnimating) return;
-          if (currentStep >= STEP_COUNT) {
-            // All steps are done. Require a more deliberate scroll here specifically —
-            // with a low tolerance for snappy single-scroll stepping, tiny wheel noise
-            // right after landing on the last step could otherwise falsely trigger this
-            // (irreversible) unlock when the user actually meant to scroll back up.
-            if (Math.abs(self.deltaY) < 8) return;
-            unlocked = true;
-            unlockScroll();
-            observer.disable();
+          const isTouch = self.event && self.event.type && self.event.type.indexOf('touch') === 0;
+          if (isTouch) {
+            reverse();
             return;
           }
-          goToStep(currentStep + 1);
+          if (tryUnlock(self)) return;
+          advance();
         },
-        onUp: () => {
-          if (isAnimating) return;
-          if (currentStep <= 0) return;
-          goToStep(currentStep - 1);
+        onUp: (self) => {
+          const isTouch = self.event && self.event.type && self.event.type.indexOf('touch') === 0;
+          if (isTouch) {
+            if (tryUnlock(self)) return;
+            advance();
+            return;
+          }
+          reverse();
         },
       });
 
