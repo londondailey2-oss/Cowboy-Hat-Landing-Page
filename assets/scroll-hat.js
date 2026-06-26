@@ -96,16 +96,18 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       const isPortrait = aspect < 0.9;
 
       // Shrink the hat itself a bit on portrait screens, and stop shifting it off to
-      // the left (the hero text sits above it on mobile, not beside it). Keep it lifted
-      // toward the upper half of the screen so it doesn't sit underneath/behind the
-      // spin-callout text box, which is anchored near the bottom on mobile.
+      // the left (the hero text sits above it on mobile, not beside it). On mobile the
+      // hat starts lower (heroY) on the hero screen, then rises to baseY as the user
+      // scrolls into step 1 so it clears the spin-callout text box anchored near the
+      // bottom — see the heroLift tween in buildTimeline.
       layout.baseScale = (isPortrait ? 1.15 : 1.6) / (2 * modelHalfExtent);
       layout.baseX = isPortrait ? 0 : -0.6;
       layout.baseY = isPortrait ? 0.55 : 0.6;
+      layout.heroY = isPortrait ? 0.1 : layout.baseY;
 
       const objHalfSize = modelHalfExtent * layout.baseScale;
       const reachX = Math.abs(layout.baseX) + objHalfSize * 1.15;
-      const reachY = Math.abs(layout.baseY) + objHalfSize * 1.15;
+      const reachY = Math.max(Math.abs(layout.baseY), Math.abs(layout.heroY)) + objHalfSize * 1.15;
 
       const zForHeight = reachY / Math.tan(FOV_RAD / 2);
       const zForWidth = reachX / (Math.tan(FOV_RAD / 2) * aspect);
@@ -202,7 +204,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     function buildTimeline(restPositions) {
       const explodeOffsets = EXPLODE_ORDER.map((_, i) => (i - (EXPLODE_ORDER.length - 1) / 2) * EXPLODE_SPACING);
-      const state = { explode: 0, clip: 0, spin: 0, lift: 0, shrink: 0, shiftRight: 0, riseUp: 0 };
+      const state = { explode: 0, clip: 0, spin: 0, lift: 0, shrink: 0, shiftRight: 0, riseUp: 0, heroLift: 0 };
 
       function render() {
         // Cutaway: clip.constant from 10 (no cut, fully solid) down to 0 (cut through center).
@@ -211,7 +213,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         hatRoot.rotation.y = state.spin * Math.PI * 2;
         hatRoot.scale.setScalar(layout.baseScale * THREE.MathUtils.lerp(1, 0.25, state.shrink));
         placement.position.x = layout.baseX + state.shiftRight * 0.1; // move into the right side of the screen for the explode
-        placement.position.y = layout.baseY + state.lift * 0.6 + state.riseUp * 0.2; // keep the exploded stack on screen
+        const restY = THREE.MathUtils.lerp(layout.heroY, layout.baseY, state.heroLift);
+        placement.position.y = restY + state.lift * 0.6 + state.riseUp * 0.2; // keep the exploded stack on screen
 
         EXPLODE_ORDER.forEach((key, i) => {
           const rest = restPositions.get(key);
@@ -242,7 +245,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       // rotation.y = spin * 2π, so a 180° turn lands at spin = 0.5.
       tl.addLabel('step0', 0);
       tl.to(heroText, { xPercent: -150, opacity: 0, duration: 0.4 }, 0)
-        .to(state, { spin: 0.5, lift: 0, clip: 1, duration: 1 }, 0);
+        .to(state, { spin: 0.5, lift: 0, clip: 1, heroLift: 1, duration: 1 }, 0);
 
       if (spinText) {
         gsap.set(spinText, { yPercent: 120, opacity: 0 });
