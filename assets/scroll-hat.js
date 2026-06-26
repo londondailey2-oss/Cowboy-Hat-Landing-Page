@@ -296,16 +296,26 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         },
       });
 
-      // Driven off actual scroll position rather than gesture detection — far less prone
-      // to jitter from trackpad momentum/rubber-banding than trying to catch this mid-gesture.
-      window.addEventListener('scroll', () => {
-        if (!unlocked) return;
-        if (window.scrollY > 0) return;
-        unlocked = false;
-        lockScroll();
-        observer.enable();
-        if (!isAnimating) goToStep(Math.max(0, currentStep - 1));
-      });
+      // Re-lock once the hat section is actually back in view, rather than computing it from
+      // raw window.scrollY — pixel-offset checks against a tolerance get unreliable once the
+      // page has scrolled deep into tall content below (momentum/rubber-banding can land
+      // anywhere), whereas "is this section visible again" is a direct, simple fact.
+      const topObserver = new IntersectionObserver(
+        (entries) => {
+          if (!unlocked) return;
+          if (entries[0].intersectionRatio < 0.95) return;
+          // Just hand control back to gesture-based stepping — currentStep is still at
+          // STEP_COUNT (the explode pose), matching what's already on screen. Letting the
+          // next real wheel/touch gesture trigger the reversal (instead of doing it
+          // automatically here) avoids racing the user's own next scroll against this one.
+          unlocked = false;
+          lockScroll();
+          window.scrollTo(0, 0);
+          observer.enable();
+        },
+        { threshold: [0, 0.95, 1] }
+      );
+      topObserver.observe(root);
 
       window.addEventListener('resize', () => {
         resize();
