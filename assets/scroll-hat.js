@@ -95,15 +95,27 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       if (modelHalfExtent == null) return;
       const isPortrait = aspect < 0.9;
 
+      if (!isPortrait) {
+        // Desktop/landscape keeps the original fixed framing — a closer, larger hat,
+        // independent of aspect ratio, rather than the "fit everything in frame" sizing
+        // used on mobile below.
+        layout.baseScale = 1.6 / (2 * modelHalfExtent);
+        layout.baseX = -0.6;
+        layout.baseY = 0.6;
+        layout.heroY = layout.baseY;
+        camera.position.z = 4.2;
+        return;
+      }
+
       // Shrink the hat itself a bit on portrait screens, and stop shifting it off to
       // the left (the hero text sits above it on mobile, not beside it). On mobile the
       // hat starts lower (heroY) on the hero screen, then rises to baseY as the user
       // scrolls into step 1 so it clears the spin-callout text box anchored near the
       // bottom — see the heroLift tween in buildTimeline.
-      layout.baseScale = (isPortrait ? 1.15 : 1.6) / (2 * modelHalfExtent);
-      layout.baseX = isPortrait ? 0 : -0.3;
-      layout.baseY = isPortrait ? 0.55 : 0.8;
-      layout.heroY = isPortrait ? 0.1 : layout.baseY;
+      layout.baseScale = 1.15 / (2 * modelHalfExtent);
+      layout.baseX = 0;
+      layout.baseY = 0.55;
+      layout.heroY = 0.1;
 
       const objHalfSize = modelHalfExtent * layout.baseScale;
       const reachX = Math.abs(layout.baseX) + objHalfSize * 1.15;
