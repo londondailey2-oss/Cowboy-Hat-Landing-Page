@@ -96,14 +96,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       const isPortrait = aspect < 0.9;
 
       if (!isPortrait) {
-        // Desktop/landscape keeps the original fixed framing — a closer, larger hat,
-        // independent of aspect ratio, rather than the "fit everything in frame" sizing
-        // used on mobile below.
-        layout.baseScale = 1.6 / (2 * modelHalfExtent);
-        layout.baseX = -0.6;
-        layout.baseY = 0.6;
+        // Desktop/landscape: a bigger, closer hat, shifted right and up to clear the
+        // "RIM" hero text instead of overlapping it.
+        layout.baseScale = 2.6 / (2 * modelHalfExtent);
+        layout.baseX = 0.45;
+        layout.baseY = 0.5;
         layout.heroY = layout.baseY;
-        camera.position.z = 4.2;
+        camera.position.z = 3.4;
         return;
       }
 
